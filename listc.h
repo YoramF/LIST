@@ -8,6 +8,9 @@
 #ifndef LISTC_H_
 #define LISTC_H_
 
+#define LISTC_INODE_MAX_ELEMENTS 0x7fffffff
+#define LISTC_MAX_ELEMENTS 0x7fffffffffffffff
+
 typedef struct _lnode
 {
 	int				elements;		// Actual number of elements
@@ -20,6 +23,7 @@ typedef struct _list
 	int				maxElements;	// Max number of elements in one lnode
 	int				sizeOfElement;	// Size of an element in bytes
 	int				nextElement;	// Used when scaning list for retrieving elements
+	int				optimize;		// used to optimize insertElement()
 	lnode			*current;		// Used when scaning list for retrieving elements
 	lnode 			*first;			// Point to first elements lnode
 	lnode 			*last;			// Points to last elelemnts lnode
@@ -30,7 +34,7 @@ typedef listHDR *LIST;
 LIST createList (const int initElements, const int sizeOfElement);
 void deleteList (LIST *list);
 void insertElement (const LIST list, const void *element);
-int listElements (const LIST list, const void (*cfunc)(void *));
+long long int listElements (const LIST list, const void (*cfunc)(void *));
 int getNextElement (const LIST list, void *val);
 void resetList (const LIST list);
 

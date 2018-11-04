@@ -29,7 +29,8 @@ static lnode *addNode (const LIST list)
 	void *ptr;
 
 	// allocate the array of elements
-	if ((ptr = calloc(list->maxElements, list->sizeOfElement)) == NULL)
+	// no need to ZERO allocated RAM - use malloc() which is faster than calloc()
+	if ((ptr = malloc(list->maxElements * list->sizeOfElement)) == NULL)
 		return NULL;
 
 	// allocate the lnode
@@ -77,6 +78,7 @@ LIST createList (const int initElements, const int sizeOfElement)
 	list->first = NULL;
 	list->last = NULL;
 	list->current = NULL;
+	list->optimize = (sizeOfElement < 9? sizeOfElement: 9);
 
 
 	// allocate the initial lnode in the list
@@ -120,7 +122,24 @@ void insertElement (const LIST list, const void *element)
 		lnodePtr = addNode(list);
 
 	arrPtr = lnodePtr->arr + (lnodePtr->elements)*list->sizeOfElement;
-	memcpy(arrPtr, element, list->sizeOfElement);
+	switch (list->optimize)
+	{
+	case 1:
+		*(char *)arrPtr = *(char *)element;
+		break;
+	case 2:
+		*(unsigned short *)arrPtr = *(unsigned short *)element;
+		break;
+	case 4:
+		*(unsigned long *)arrPtr = *(unsigned long *)element;
+		break;
+	case 8:
+		*(unsigned long long *)arrPtr = *(unsigned long long *)element;
+		break;
+	default:
+		memcpy(arrPtr, element, list->sizeOfElement);
+	}
+
 
 	// increment nunber of elements in lnode
 	lnodePtr->elements++;
@@ -130,9 +149,9 @@ void insertElement (const LIST list, const void *element)
 // Since list can be used with any type variables, the calling module must provide the right print function
 // for the stored variable
 // The right/functional way to list stored element is by using resetList() and getNextElement()
-int listElements (const LIST list, const void (*cfunc)(void *))
+long long int listElements (const LIST list, const void (*cfunc)(void *))
 {
-	int elements = 0;
+	long long int elements = 0;
 	int i;
 	lnode *lnodePtr = list->first;
 	void *elementPtr;
@@ -181,7 +200,25 @@ int getNextElement (const LIST list, void *val)
 		{
 			ePtr = list->current->arr + (list->nextElement * list->sizeOfElement);
 			list->nextElement++;
-			memcpy(val, ePtr, list->sizeOfElement);
+
+			switch (list->optimize)
+			{
+			case 1:
+				*(char *)val = *(char *)ePtr;
+				break;
+			case 2:
+				*(unsigned short *)val = *(unsigned short *)ePtr;
+				break;
+			case 4:
+				*(unsigned long *)val = *(unsigned long *)ePtr;
+				break;
+			case 8:
+				*(unsigned long long *)val = *(unsigned long long *)ePtr;
+				break;
+			default:
+				memcpy(val, ePtr, list->sizeOfElement);
+			}
+
 			return 1;
 		}
 
